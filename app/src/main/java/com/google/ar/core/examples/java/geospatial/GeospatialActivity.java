@@ -588,29 +588,25 @@ public class GeospatialActivity extends AppCompatActivity
       Texture virtualObjectTexture =
           Texture.createFromAsset(
               render,
-              "models/spatial_marker_baked.png",
+              "models/LocationPin_tex.png",
               Texture.WrapMode.CLAMP_TO_EDGE,
               Texture.ColorFormat.SRGB);
 
       //virtualObjectMesh = Mesh.createFromAsset(render, "models/geospatial_marker.obj");
       virtualObjectMesh = Mesh.createFromAsset(render, "models/locationpin.obj");
 
-      //Text abc = new Text();
-      //Texture abcT = abc.drawCanvasToTexture(render,"abc1234566666666666666",80.0f);
       geospatialAnchorVirtualObjectShader =
           Shader.createFromAssets(
                   render,
                   "shaders/ar_unlit_object.vert",
-                  //"shaders/ar_unlit_vertcolor.vert",
                   "shaders/ar_unlit_object.frag",
                   /* defines= */ null)
-              //.setTexture("u_Texture", abcT);
       .setTexture("u_Texture",virtualObjectTexture);
       // Virtual object to render (Terrain anchor marker)
       Texture terrainAnchorVirtualObjectTexture =
           Texture.createFromAsset(
               render,
-              "models/spatial_marker_yellow.png",
+              "models/LocationPin_tex.png",
               Texture.WrapMode.CLAMP_TO_EDGE,
               Texture.ColorFormat.SRGB);
       terrainAnchorVirtualObjectShader =

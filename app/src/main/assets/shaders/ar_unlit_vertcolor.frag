@@ -14,14 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+precision mediump float;
 
-uniform mat4 u_ModelView;
-uniform mat4 u_ModelViewProjection;
+in vec4 v_ColorVS;
+layout(location = 0) out vec4 o_FragColor;
 
-layout(location = 0) in vec4 a_Position;
-layout(location = 1) in vec4 col;
-out vec4 v_ColorVS;
 void main() {
-  v_ColorVS = col;
-  gl_Position = u_ModelViewProjection * a_Position;
+  o_FragColor = v_ColorVS;
+  //if(o_FragColor == vec4(0.0,0.0,0.0,1.0))discard;
+  return;
 }

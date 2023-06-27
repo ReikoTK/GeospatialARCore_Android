@@ -140,7 +140,7 @@ public class Mesh implements Closeable {
       VertexBuffer[] vertexBuffers = {
         new VertexBuffer(render, 3, localCoordinates),
         new VertexBuffer(render, 2, textureCoordinates),
-        new VertexBuffer(render, 3, normals),
+        new VertexBuffer(render, 3, normals)
       };
 
       IndexBuffer indexBuffer = new IndexBuffer(render, vertexIndices);
