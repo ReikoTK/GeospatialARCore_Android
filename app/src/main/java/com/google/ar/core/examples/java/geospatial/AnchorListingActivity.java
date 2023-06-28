@@ -13,6 +13,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewTreeObserver;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -97,24 +98,30 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
                         poseList = gson.fromJson(outputString, new TypeToken<List<AnchorPose>>() {
                         }.getType());
 
-                        AnchorViewAdapter adapter = new AnchorViewAdapter(poseList);
+                        //Bind On layout finish
+                        anchorListing.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                            @Override
+                            public void onGlobalLayout() {
+                                Log.v("listing",String.valueOf(anchorListing.getChildCount()));
 
+                                //googlemap add pins
+                                for (int i = 0; i < anchorListing.getChildCount(); i++) {
+                                    AnchorViewHolder holder = (AnchorViewHolder) anchorListing.getChildViewHolder(anchorListing.getChildAt(i));
+                                    addMarkerToMap(holder.latitude,holder.longitude,holder.Name, anchorListing.getChildAt(i));
+                                }
+                            }
+                        });
+
+                        //Start layout items
+                        AnchorViewAdapter adapter = new AnchorViewAdapter(poseList);
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
                                 LinearLayoutManager llm = new LinearLayoutManager(getBaseContext());
                                 anchorListing.setLayoutManager(llm);
                                 anchorListing.setAdapter(adapter);
-
                             }
                         });
-
-                        //googlemap add pins
-                        for (int i = 0; i < anchorListing.getChildCount(); i++) {
-                            AnchorViewHolder holder = (AnchorViewHolder) anchorListing.getChildViewHolder(anchorListing.getChildAt(i));
-                            addMarkerToMap(holder.latitude,holder.longitude,holder.Name, anchorListing.getChildAt(i));
-                        }
-
                     }
                 } catch (IOException e) {
                     Log.e("HTTPCall", e.toString());
@@ -176,12 +183,14 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
             public void run() {
                 LatLng point = new LatLng(latitude,longitude);
                 Marker m = googleMap.addMarker(new MarkerOptions().position(point).title(Name));
+                Log.v("google marker",String.valueOf(m.isVisible()));
                 googleMarkerTag tag = new googleMarkerTag(Name,v);
                 m.setTag(tag);
                 googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
                     @Override
                     public boolean onMarkerClick(@NonNull Marker marker) {
                         googleMarkerTag tag = (googleMarkerTag) marker.getTag();
+                        resetViewHolderColor();
                         tag.anchorViewHolder.findViewById(R.id.LLClickable).setBackgroundColor(Color.argb(1,0.6f,0.6f,1f));
                         return false;
                     }
@@ -192,5 +201,12 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
 
     public void focusToMarker(double lat,double lng){
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(lat,lng)));
+    }
+
+    public void resetViewHolderColor(){
+        for (int i = 0; i < anchorListing.getChildCount(); i++) {
+            AnchorViewHolder holder = (AnchorViewHolder) anchorListing.getChildViewHolder(anchorListing.getChildAt(i));
+            holder.itemView.findViewById(R.id.LLClickable).setBackgroundColor(Color.argb(1,0.19f,0.19f,0.19f));
+        }
     }
 }

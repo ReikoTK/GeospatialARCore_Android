@@ -3,6 +3,7 @@ package com.google.ar.core.examples.java.geospatial.anchor;
 import static android.content.ContentValues.TAG;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -40,6 +41,8 @@ public class AnchorViewHolder extends RecyclerView.ViewHolder{
         itemView.findViewById(R.id.LLClickable).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                act.resetViewHolderColor();
+                view.findViewById(R.id.LLClickable).setBackgroundColor(Color.argb(1,0.6f,0.6f,1f));
                 act.focusToMarker(latitude,longitude);
             }
         });
