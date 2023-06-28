@@ -48,7 +48,6 @@ public final class LocationPermissionHelper {
         return true;
       }
     }
-
     return false;
   }
 
@@ -63,5 +62,9 @@ public final class LocationPermissionHelper {
     intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
     intent.setData(Uri.fromParts("package", activity.getPackageName(), null));
     activity.startActivity(intent);
+  }
+
+  public static void requestCoarseLocationPermission(Activity activity){
+    ActivityCompat.requestPermissions(activity,new String[]{ Manifest.permission.ACCESS_COARSE_LOCATION},LOCATION_PERMISSION_CODE);
   }
 }

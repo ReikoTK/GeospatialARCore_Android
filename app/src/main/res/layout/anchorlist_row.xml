@@ -5,12 +5,13 @@
     android:layout_height="wrap_content"
     android:paddingHorizontal="10dp"
     android:paddingVertical="10dp"
-    android:background="#bf323232">
+    android:background="#bf323232"
+    android:id="@+id/LLClickable">
 
     <Button
         android:layout_width="0dp"
         android:layout_margin="3dp"
-        android:text="Show"
+        android:text="AR"
         android:id="@+id/AnchorButton"
         android:gravity="center"
         android:layout_height="wrap_content"

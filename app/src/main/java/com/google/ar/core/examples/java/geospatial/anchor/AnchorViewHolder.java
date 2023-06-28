@@ -2,6 +2,7 @@ package com.google.ar.core.examples.java.geospatial.anchor;
 
 import static android.content.ContentValues.TAG;
 
+import android.content.Context;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -22,18 +23,26 @@ public class AnchorViewHolder extends RecyclerView.ViewHolder{
     public TextView LongView;
     public AnchorViewHolder(View itemView){
         super(itemView);
-        NameView = (TextView) itemView.findViewById(R.id.AnchorName);
-        LatView = (TextView) itemView.findViewById(R.id.AnchorLatitude);
-        LongView = (TextView) itemView.findViewById(R.id.AnchorLongitude);
 
+        NameView = (TextView) itemView.findViewById(R.id.AnchorName);
+        LatView  = (TextView) itemView.findViewById(R.id.AnchorLatitude);
+        LongView = (TextView) itemView.findViewById(R.id.AnchorLongitude);
+        AnchorListingActivity act = (AnchorListingActivity) itemView.getContext();
         itemView.findViewById(R.id.AnchorButton).setOnClickListener(
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        AnchorListingActivity act = (AnchorListingActivity) view.getContext();
                         act.openARActivity(latitude,longitude,Name);
                     }
                 }
         );
+
+        itemView.findViewById(R.id.LLClickable).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                act.focusToMarker(latitude,longitude);
+            }
+        });
     }
+
 }
