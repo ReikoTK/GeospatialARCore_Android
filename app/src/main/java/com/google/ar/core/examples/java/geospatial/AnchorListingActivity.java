@@ -14,6 +14,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -29,6 +30,8 @@ import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -44,6 +47,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -54,7 +58,10 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
     private MapView mMapView;
     private FusedLocationProviderClient fusedLocationProviderClient;
     private List<AnchorPose> poseList;
-
+    private TextView FilterEventBtn;
+    private TextView FilterFoodBtn;
+    private TextView FilterShopBtn;
+    private Location lastKnownLocation;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,6 +81,31 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
             requestFineLocationPermission(this);
         }
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+
+        //Filtering buttons
+        FilterEventBtn = findViewById(R.id.FilterEventBtn);
+        FilterEventBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                view.setBackgroundColor(Color.argb(1f,0f,0.1f,1f));
+            }
+        });
+
+        FilterFoodBtn = findViewById(R.id.FilterFoodBtn);
+        FilterFoodBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                view.setBackgroundColor(Color.argb(1f,0f,0.1f,1f));
+            }
+        });
+
+        FilterShopBtn = findViewById(R.id.FilterShopBtn);
+        FilterShopBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                view.setBackgroundColor(Color.argb(1f,0f,0.1f,1f));
+            }
+        });
     }
 
     public void StartHTTPCall() {
@@ -99,15 +131,16 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
                         }.getType());
 
                         //Bind On layout finish
+
                         anchorListing.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                             @Override
                             public void onGlobalLayout() {
-                                Log.v("listing",String.valueOf(anchorListing.getChildCount()));
-
-                                //googlemap add pins
+                                //googlemap add pins anchorListing.getAdapter().getItemCount()
                                 for (int i = 0; i < anchorListing.getChildCount(); i++) {
-                                    AnchorViewHolder holder = (AnchorViewHolder) anchorListing.getChildViewHolder(anchorListing.getChildAt(i));
-                                    addMarkerToMap(holder.latitude,holder.longitude,holder.Name, anchorListing.getChildAt(i));
+                                    //AnchorViewHolder holder = (AnchorViewHolder) anchorListing.findViewHolderForAdapterPosition(i);
+                                    //AnchorViewHolder holder = (AnchorViewHolder) anchorListing.getChildViewHolder(anchorListing.getChildAt(i));
+                                    //addMarkerToMap(holder.latitude,holder.longitude,holder.Name, anchorListing.getChildAt(i));
+                                    //holder.distanceView.setText("ggggg");
                                 }
                             }
                         });
@@ -167,10 +200,12 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
             @Override
             public void onSuccess(Location location) {
                 if(location != null){
+                    lastKnownLocation = location;
                     Log.e("LOCATION",String.valueOf(location.getLatitude()) + " " + String.valueOf(location.getLongitude()));
                     LatLng currentPos = new LatLng(location.getLatitude(),location.getLongitude());
                     googleMap.moveCamera(CameraUpdateFactory.zoomTo(19f));
                     googleMap.moveCamera(CameraUpdateFactory.newLatLng(currentPos));
+                    googleMap.addMarker(new MarkerOptions().position(currentPos).icon(BitmapDescriptorFactory.fromAsset("models/roundpin.jpg")));
                 }
             }
         });
@@ -182,8 +217,10 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
             @Override
             public void run() {
                 LatLng point = new LatLng(latitude,longitude);
-                Marker m = googleMap.addMarker(new MarkerOptions().position(point).title(Name));
-                Log.v("google marker",String.valueOf(m.isVisible()));
+                Marker m = googleMap.addMarker(new MarkerOptions()
+                        .position(point)
+                        .title(Name)
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE)));
                 googleMarkerTag tag = new googleMarkerTag(Name,v);
                 m.setTag(tag);
                 googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
@@ -208,5 +245,11 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
             AnchorViewHolder holder = (AnchorViewHolder) anchorListing.getChildViewHolder(anchorListing.getChildAt(i));
             holder.itemView.findViewById(R.id.LLClickable).setBackgroundColor(Color.argb(1,0.19f,0.19f,0.19f));
         }
+    }
+
+    public float calcDist(double latitude, double longitude){
+        float[] result = new float[2];
+        Location.distanceBetween(lastKnownLocation.getLatitude(),lastKnownLocation.getLongitude(),latitude,longitude,result);
+        return result[0];
     }
 }

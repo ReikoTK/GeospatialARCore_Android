@@ -22,6 +22,7 @@ public class AnchorViewHolder extends RecyclerView.ViewHolder{
     public TextView NameView;
     public TextView LatView;
     public TextView LongView;
+    public TextView distanceView;
     public AnchorViewHolder(View itemView){
         super(itemView);
 
@@ -47,6 +48,8 @@ public class AnchorViewHolder extends RecyclerView.ViewHolder{
                 act.focusToMarker(latitude,longitude);
             }
         });
+
+        distanceView = itemView.findViewById(R.id.DistanceDisplay);
     }
 
 }
