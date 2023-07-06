@@ -11,7 +11,7 @@ import android.opengl.GLUtils;
 import android.util.Log;
 
 public class Text {
-    public Texture drawCanvasToTexture(SampleRender render,
+    public static Texture drawCanvasToTexture(SampleRender render,
                                        String aText,
                                        float aFontSize) {
         Bitmap textBitmap;
@@ -46,6 +46,7 @@ public class Text {
         } catch (Throwable t) {
             Log.e("TEXTURE",t.toString());
         }finally {
+            Log.v("TEXTURE","texture create success");
             return texture;
         }
     }

@@ -16,11 +16,16 @@
  */
 precision mediump float;
 
-in vec4 v_ColorVS;
+uniform sampler2D u_Texture;
+
+in vec2 v_TexCoord;
 layout(location = 0) out vec4 o_FragColor;
 
 void main() {
-  o_FragColor = v_ColorVS;
+  // Mirror texture coordinates over the X axis
+  vec2 texCoord = vec2(v_TexCoord.x, 1.0 - v_TexCoord.y);
+
+  o_FragColor = vec4(texture(u_Texture, texCoord).rgb, 1.0);
   //if(o_FragColor == vec4(0.0,0.0,0.0,1.0))discard;
   return;
 }

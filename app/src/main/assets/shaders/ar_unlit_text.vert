@@ -19,9 +19,12 @@ uniform mat4 u_ModelView;
 uniform mat4 u_ModelViewProjection;
 
 layout(location = 0) in vec4 a_Position;
-layout(location = 1) in vec4 col;
-out vec4 v_ColorVS;
+layout(location = 1) in vec2 a_TexCoord;
+layout(location = 2) in vec3 a_Normal;
+out vec2 v_TexCoord;
+
+
 void main() {
-  v_ColorVS = col;
-  gl_Position = u_ModelViewProjection * a_Position;
+  v_TexCoord = a_TexCoord;
+  gl_Position = u_ModelViewProjection * (a_Position + vec4(0.0,0.3,0.0,0.0));
 }
