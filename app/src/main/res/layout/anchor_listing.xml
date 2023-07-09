@@ -3,6 +3,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -14,12 +15,53 @@
         android:gravity="center"
         android:background="@android:color/holo_blue_light"/>
 
-    <com.google.android.gms.maps.MapView
-        android:id="@+id/mapView"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="0.7"/>
+        android:layout_weight="0.7">
+        <com.google.android.gms.maps.MapView
+            android:id="@+id/mapView"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"/>
+        <LinearLayout
+            android:layout_margin="20dp"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="bottom">
+            <TextView
+                android:text="Event"
+                android:gravity="center"
+                android:scaleType="centerInside"
+                android:contentDescription="FilterEventBtn"
+                android:layout_width="70dp"
+                android:layout_height="30dp"
+                android:background="@drawable/button_bg"
+                android:id="@+id/FilterEventBtn"
+                android:layout_marginHorizontal="5dp"/>
+            <TextView
+                android:text="Food"
+                android:scaleType="centerInside"
+                android:gravity="center"
+                android:contentDescription="FilterFoodBtn"
+                android:layout_width="70dp"
+                android:layout_height="30dp"
+                android:background="@drawable/button_bg"
+                android:id="@+id/FilterFoodBtn"
+                android:layout_marginHorizontal="5dp"/>
+            <TextView
+                android:text="Shop"
+                android:scaleType="centerInside"
+                android:gravity="center"
+                android:contentDescription="FilterShopBtn"
+                android:layout_width="70dp"
+                android:layout_height="30dp"
+                android:background="@drawable/button_bg"
+                android:id="@+id/FilterShopBtn"
+                android:layout_marginHorizontal="5dp"/>
+        </LinearLayout>
 
+    </FrameLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/myAnchorList"
