@@ -42,7 +42,6 @@ public class AnchorViewHolder extends RecyclerView.ViewHolder{
             @Override
             public void onClick(View view) {
                 act.resetViewHolderColor();
-                //acc
                 view.findViewById(R.id.LLClickable).setBackgroundColor(Color.argb(1,0.6f,0.6f,1f));
                 act.focusToMarker(latitude,longitude);
             }
