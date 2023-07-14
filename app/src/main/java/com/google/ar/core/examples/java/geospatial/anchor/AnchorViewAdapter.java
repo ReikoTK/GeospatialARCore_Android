@@ -36,12 +36,14 @@ public class AnchorViewAdapter extends RecyclerView.Adapter<AnchorViewHolder>{
         viewHolder.latitude = list.get(position).getLatitude();
         viewHolder.longitude = list.get(position).getLongitude();
         viewHolder.Name = list.get(position).getName();
+        viewHolder.EventType = list.get(position).getEventType();
+        Log.e("ACT",act.toString());
         act.addMarkerToMap(list.get(position).getLatitude(),list.get(position).getLongitude(),list.get(position).getName(),viewHolder.itemView);
 
         Float dist = act.calcDist(list.get(position).latitude,list.get(position).longitude);
         if (dist>1000){
             DecimalFormat df = new DecimalFormat("0.0");
-            viewHolder.distanceView.setText(df.format(dist) + "KM");
+            viewHolder.distanceView.setText(df.format(dist/1000f) + "KM");
         }else{
             DecimalFormat df = new DecimalFormat("0.00");
             viewHolder.distanceView.setText(df.format(dist) + "M");

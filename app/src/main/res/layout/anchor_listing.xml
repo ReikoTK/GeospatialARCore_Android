@@ -10,6 +10,7 @@
         android:layout_weight="0.1"
         android:text="近くのイベントを探しています..."
         android:textSize="16dp"
+        android:id="@+id/topTextView"
         android:transitionName="anim/slide_in_left.xml"
         android:textAlignment="center"
         android:gravity="center"
@@ -30,13 +31,23 @@
             android:orientation="horizontal"
             android:layout_gravity="bottom">
             <TextView
+                android:text="All"
+                android:gravity="center"
+                android:scaleType="centerInside"
+                android:contentDescription="FilterAllBtn"
+                android:layout_width="100dp"
+                android:layout_height="40dp"
+                android:background="@color/deepBlue"
+                android:id="@+id/FilterAllBtn"
+                android:layout_marginHorizontal="5dp"/>
+            <TextView
                 android:text="Event"
                 android:gravity="center"
                 android:scaleType="centerInside"
                 android:contentDescription="FilterEventBtn"
-                android:layout_width="70dp"
-                android:layout_height="30dp"
-                android:background="@drawable/button_bg"
+                android:layout_width="100dp"
+                android:layout_height="40dp"
+                android:background="@color/lightBlue"
                 android:id="@+id/FilterEventBtn"
                 android:layout_marginHorizontal="5dp"/>
             <TextView
@@ -44,9 +55,9 @@
                 android:scaleType="centerInside"
                 android:gravity="center"
                 android:contentDescription="FilterFoodBtn"
-                android:layout_width="70dp"
-                android:layout_height="30dp"
-                android:background="@drawable/button_bg"
+                android:layout_width="100dp"
+                android:layout_height="40dp"
+                android:background="@color/lightBlue"
                 android:id="@+id/FilterFoodBtn"
                 android:layout_marginHorizontal="5dp"/>
             <TextView
@@ -54,9 +65,9 @@
                 android:scaleType="centerInside"
                 android:gravity="center"
                 android:contentDescription="FilterShopBtn"
-                android:layout_width="70dp"
-                android:layout_height="30dp"
-                android:background="@drawable/button_bg"
+                android:layout_width="100dp"
+                android:layout_height="40dp"
+                android:background="@color/lightBlue"
                 android:id="@+id/FilterShopBtn"
                 android:layout_marginHorizontal="5dp"/>
         </LinearLayout>

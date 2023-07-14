@@ -76,7 +76,9 @@
       android:layout_alignParentBottom="true"
       android:padding="10dp"
       android:textOff="Off"
-      android:textOn="On" />
+      android:textOn="On"
+      android:visibility="invisible"
+      android:clickable="false"/>
 
   <Button
       android:id="@+id/clear_anchors_button"

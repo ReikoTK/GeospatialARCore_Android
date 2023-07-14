@@ -39,6 +39,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.ar.core.examples.java.geospatial.anchor.AnchorPose;
 import com.google.ar.core.examples.java.geospatial.anchor.AnchorViewAdapter;
 import com.google.ar.core.examples.java.geospatial.anchor.AnchorViewHolder;
+import com.google.ar.core.examples.java.geospatial.filter.AnchorFilterButton;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.ar.core.examples.java.common.helpers.LocationPermissionHelper;
@@ -48,6 +49,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -58,14 +60,18 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
     private MapView mMapView;
     private FusedLocationProviderClient fusedLocationProviderClient;
     private List<AnchorPose> poseList;
-    private TextView FilterEventBtn;
-    private TextView FilterFoodBtn;
-    private TextView FilterShopBtn;
+    private List<AnchorFilterButton> AllFilterBtn;
+    private AnchorFilterButton FilterEventBtn;
+    private AnchorFilterButton FilterFoodBtn;
+    private AnchorFilterButton FilterShopBtn;
+    private TextView FilterAllBtn;
     private Location lastKnownLocation;
+    private TextView topTextView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.anchor_listing);
+        topTextView = findViewById(R.id.topTextView);
         anchorListing = findViewById(R.id.myAnchorList);
 
         //GoogleMap stuff
@@ -82,28 +88,33 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
         }
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
-        //Filtering buttons
-        FilterEventBtn = findViewById(R.id.FilterEventBtn);
-        FilterEventBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                view.setBackgroundColor(Color.argb(1f,0f,0.1f,1f));
-            }
-        });
+        AllFilterBtn = new ArrayList<>();
+        //Filtering buttons binding
+        FilterEventBtn = new AnchorFilterButton(findViewById(R.id.FilterEventBtn),EventTypesEnum.イベント,this);
+        FilterEventBtn.CreateOnClick(this);
+        AllFilterBtn.add(FilterEventBtn);
 
-        FilterFoodBtn = findViewById(R.id.FilterFoodBtn);
-        FilterFoodBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                view.setBackgroundColor(Color.argb(1f,0f,0.1f,1f));
-            }
-        });
+        FilterFoodBtn= new AnchorFilterButton(findViewById(R.id.FilterFoodBtn),EventTypesEnum.レストラン,this);
+        FilterFoodBtn.CreateOnClick(this);
+        AllFilterBtn.add(FilterFoodBtn);
 
-        FilterShopBtn = findViewById(R.id.FilterShopBtn);
-        FilterShopBtn.setOnClickListener(new View.OnClickListener() {
+        FilterShopBtn= new AnchorFilterButton(findViewById(R.id.FilterShopBtn),EventTypesEnum.ショップ,this);
+        FilterShopBtn.CreateOnClick(this);
+        AllFilterBtn.add(FilterShopBtn);
+
+        FilterAllBtn = findViewById(R.id.FilterAllBtn);
+        FilterAllBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                view.setBackgroundColor(Color.argb(1f,0f,0.1f,1f));
+                clearAllSelection();
+                FilterAllBtn.setBackgroundColor(getColor(R.color.deepBlue));
+                AnchorViewAdapter adapter = new AnchorViewAdapter(poseList);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        anchorListing.setAdapter(adapter);
+                    }
+                });
             }
         });
     }
@@ -130,6 +141,7 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
                         poseList = gson.fromJson(outputString, new TypeToken<List<AnchorPose>>() {
                         }.getType());
 
+                        topTextView.setText("近くに"+ poseList.size()+"件のイベントがあります。");
                         //Bind On layout finish
 
                         anchorListing.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -172,11 +184,12 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
         return result.toString("UTF-8");
     }
 
-    public void openARActivity(double latitude, double longitude, String Name) {
+    public void openARActivity(double latitude, double longitude, String Name, String EventType) {
         Intent intent = new Intent(this, GeospatialActivity.class);
         intent.putExtra("TargetLatitude", latitude);
         intent.putExtra("TargetLongitude", longitude);
         intent.putExtra("TargetName", Name);
+        intent.putExtra("TargetType",EventType);
         startActivity(intent);
         overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
     }
@@ -251,5 +264,30 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
         float[] result = new float[2];
         Location.distanceBetween(lastKnownLocation.getLatitude(),lastKnownLocation.getLongitude(),latitude,longitude,result);
         return result[0];
+    }
+
+    public void filterList(EventTypesEnum eventType){
+
+        List<AnchorPose> newList = new ArrayList<>();
+        for (AnchorPose pose: poseList) {
+            if(pose.type == eventType.getValue()){
+                newList.add(pose);
+            }
+        }
+        AnchorViewAdapter adapter = new AnchorViewAdapter(newList);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                anchorListing.setAdapter(adapter);
+            }
+        });
+    }
+
+    public void clearAllSelection(){
+        FilterAllBtn.setBackgroundColor(getColor(R.color.lightBlue));
+
+        for (AnchorFilterButton btn:AllFilterBtn) {
+            btn.clearSelection();
+        }
     }
 }

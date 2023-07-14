@@ -19,6 +19,7 @@ public class AnchorViewHolder extends RecyclerView.ViewHolder{
     public double latitude;
     public double longitude;
     public String Name;
+    public String EventType;
     public TextView NameView;
     public TextView LatView;
     public TextView LongView;
@@ -34,7 +35,7 @@ public class AnchorViewHolder extends RecyclerView.ViewHolder{
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        act.openARActivity(latitude,longitude,Name);
+                        act.openARActivity(latitude,longitude,Name,EventType);
                     }
                 }
         );

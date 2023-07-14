@@ -357,13 +357,13 @@ public class GeospatialActivity extends AppCompatActivity
                         }
                         return true;
                       }
-
                       @Override
                       public boolean onDown(MotionEvent e) {
                         return true;
                       }
                     });
-    surfaceView.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
+    //Disabled the ontouch create anchor event, we dont need it for only displaying the targeted anchor
+    //surfaceView.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
     fusedLocationClient = LocationServices.getFusedLocationProviderClient(/* context= */ this);
   }
 
@@ -605,7 +605,7 @@ public class GeospatialActivity extends AppCompatActivity
                       Texture.WrapMode.CLAMP_TO_EDGE,
                       Texture.ColorFormat.SRGB);
       Texture textTexture = Text.drawCanvasToTexture(render, getIntent().getStringExtra("TargetName"),72f);
-      TextMesh = Mesh.createFromAsset(render, "models/cube.obj");
+      TextMesh = Mesh.createFromAsset(render, "models/textRenderPlane.obj");
       virtualObjectMesh = Mesh.createFromAsset(render, "models/locationpin.obj");
 
       geospatialAnchorVirtualObjectShader =
@@ -860,7 +860,8 @@ public class GeospatialActivity extends AppCompatActivity
           streetscapeGeometryBuildingShader
                   .setVec4(
                           "u_Color",
-                          new float[] {/* r= */ color[0], /* g= */ color[1], /* b= */ color[2], color[3]})
+                          //new float[] {/* r= */ color[0], /* g= */ color[1], /* b= */ color[2], color[3]})
+                          new float[] {/* r= */ color[0], /* g= */ color[1], /* b= */ color[2], 0})
                   .setMat4("u_ModelViewProjection", modelViewProjectionMatrix);
           render.draw(mesh, streetscapeGeometryBuildingShader);
         } else if (streetscapeGeometry.getType() == StreetscapeGeometry.Type.TERRAIN) {
@@ -1104,7 +1105,10 @@ public class GeospatialActivity extends AppCompatActivity
                             quaternion[1],
                             quaternion[2],
                             quaternion[3],
-                            geospatialPose.getOrientationYawAccuracy());
+                            geospatialPose.getOrientationYawAccuracy()) +
+                    //Target Anchor Details
+                    "\nイベント名： " + getIntent().getStringExtra("TargetName") +
+                    "\nタイプ： " + getIntent().getStringExtra("TargetType");
     runOnUiThread(
             () -> {
               geospatialPoseTextView.setText(poseText);
