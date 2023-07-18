@@ -1,4 +1,4 @@
-package com.google.ar.core.examples.java.geospatial.anchor;
+package com.google.ar.core.examples.java.geospatial.anchorList;
 
 import static android.content.ContentValues.TAG;
 
@@ -13,6 +13,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
+//Tried to do http call with another file (this one),
+// but cant find a way to give a return back to the main thread,
+// so this file is only a junk example file
 public class HTTPCall {
     public String HTTPGetAllAnchorDataByJsonStr(String URL){
         AtomicReference<String> ReturnVal = new AtomicReference<>("");

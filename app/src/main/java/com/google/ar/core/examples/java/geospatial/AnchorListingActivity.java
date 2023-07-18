@@ -1,6 +1,5 @@
 package com.google.ar.core.examples.java.geospatial;
 
-import static com.google.ar.core.examples.java.common.helpers.LocationPermissionHelper.requestCoarseLocationPermission;
 import static com.google.ar.core.examples.java.common.helpers.LocationPermissionHelper.requestFineLocationPermission;
 
 import android.Manifest;
@@ -29,28 +28,26 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.ar.core.examples.java.geospatial.anchor.AnchorPose;
-import com.google.ar.core.examples.java.geospatial.anchor.AnchorViewAdapter;
-import com.google.ar.core.examples.java.geospatial.anchor.AnchorViewHolder;
+import com.google.ar.core.examples.java.geospatial.anchorList.AnchorPose;
+import com.google.ar.core.examples.java.geospatial.anchorList.AnchorViewAdapter;
+import com.google.ar.core.examples.java.geospatial.anchorList.AnchorViewHolder;
 import com.google.ar.core.examples.java.geospatial.filter.AnchorFilterButton;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.google.ar.core.examples.java.common.helpers.LocationPermissionHelper;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -59,7 +56,7 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
     private GoogleMap googleMap;
     private MapView mMapView;
     private FusedLocationProviderClient fusedLocationProviderClient;
-    private List<AnchorPose> poseList;
+    private ArrayList<AnchorPose> poseList;
     private List<AnchorFilterButton> AllFilterBtn;
     //Marker list for filtering
     private List<Marker> CreatedMarkers = new ArrayList<>();
@@ -69,12 +66,14 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
     private TextView FilterAllBtn;
     private Location lastKnownLocation;
     private TextView topTextView;
+    private TextView arViewBtn;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.anchor_listing);
         topTextView = findViewById(R.id.topTextView);
         anchorListing = findViewById(R.id.myAnchorList);
+        arViewBtn = findViewById(R.id.ARViewBtn);
 
         //GoogleMap stuff
         Bundle mapViewBundle = null;
@@ -85,10 +84,18 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
         mMapView.getMapAsync(this);
 
         //GPS stuff
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestFineLocationPermission(this);
         }
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+
+        arViewBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                openARActivity();
+            }
+        });
 
         AllFilterBtn = new ArrayList<>();
         //If there are many filter types may need to find another way to do this shit
@@ -134,7 +141,9 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
             public void run() {
                 HttpURLConnection httpConn = null;
                 try {
-                    URL url = new URL("https://webhook.site/816e44e1-1495-4d9d-a777-9b513a266925");
+                    //testing on webhook
+                    //for real implementation, need to do a "POST" method, give current location data to server for searching near area
+                    URL url = new URL("https://webhook.site/58772d7b-43e2-42ee-9762-68ea141dd065");
                     httpConn = (HttpURLConnection) url.openConnection();
                     httpConn.setRequestMethod("GET");
                     httpConn.setUseCaches(false);
@@ -150,8 +159,8 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
                         }.getType());
 
                         topTextView.setText("近くに"+ poseList.size()+"件のイベントがあります。");
-                        //Bind On layout finish
 
+                        //Bind On layout finish
                         anchorListing.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                             @Override
                             public void onGlobalLayout() {
@@ -185,12 +194,25 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
         return result.toString("UTF-8");
     }
 
-    public void openARActivity(double latitude, double longitude, String Name, EventTypesEnum EventType) {
+    //For displaying multiple pins
+    public void openARActivity(){
+        Bundle extras = new Bundle();
+        extras.putSerializable("PinDatas",poseList);
         Intent intent = new Intent(this, GeospatialActivity.class);
-        intent.putExtra("TargetLatitude", latitude);
-        intent.putExtra("TargetLongitude", longitude);
-        intent.putExtra("TargetName", Name);
-        intent.putExtra("TargetType",EventType);
+        intent.putExtra("PinDatas",extras);
+        startActivity(intent);
+        overridePendingTransition(R.anim.slide_in_right,R.anim.slide_out_left);
+    }
+
+    //For only display one Pin
+    public void openARActivity(double latitude, double longitude, String Name, EventTypesEnum EventType) {
+        AnchorPose pose = new AnchorPose(latitude,longitude,Name, EventType.getValue());
+        ArrayList<AnchorPose> poseList = new ArrayList<>();
+        poseList.add(pose);
+        Bundle extras = new Bundle();
+        extras.putSerializable("PinDatas",poseList);
+        Intent intent = new Intent(this, GeospatialActivity.class);
+        intent.putExtra("PinDatas", extras);
         startActivity(intent);
         overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
     }
@@ -311,7 +333,7 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
         for(Marker m : CreatedMarkers){
             googleMarkerTag tag = (googleMarkerTag) m.getTag();
             //FOR REAL IMPLEMENTATION CREATE A UID FOR EACH TAG INSTEAD OF USING THE NAME TO CHECK
-            if(tag.Name == ID){
+            if(Objects.equals(tag.Name, ID)){
                 return true;
             }
         }

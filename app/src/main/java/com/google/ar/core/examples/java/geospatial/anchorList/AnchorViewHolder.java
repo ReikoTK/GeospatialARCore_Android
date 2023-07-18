@@ -1,19 +1,12 @@
-package com.google.ar.core.examples.java.geospatial.anchor;
+package com.google.ar.core.examples.java.geospatial.anchorList;
 
-import static android.content.ContentValues.TAG;
-
-import android.content.Context;
 import android.graphics.Color;
-import android.media.metrics.Event;
-import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
-import com.google.ar.core.Anchor;
 import com.google.ar.core.examples.java.geospatial.AnchorListingActivity;
 import com.google.ar.core.examples.java.geospatial.EventTypesEnum;
-import  com.google.ar.core.examples.java.geospatial.GeospatialActivity;
+
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.ar.core.examples.java.geospatial.R;
 

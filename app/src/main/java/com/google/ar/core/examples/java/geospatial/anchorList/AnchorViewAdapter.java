@@ -1,12 +1,10 @@
-package com.google.ar.core.examples.java.geospatial.anchor;
+package com.google.ar.core.examples.java.geospatial.anchorList;
 
-import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.ar.core.examples.java.geospatial.AnchorListingActivity;

@@ -16,7 +16,7 @@ public class Text {
                                        float aFontSize) {
         Bitmap textBitmap;
         int textcount = aText.length();
-        Texture texture = new Texture(render, Texture.Target.TEXTURE_2D, Texture.WrapMode.CLAMP_TO_EDGE);
+        //Texture texture = new Texture(render, Texture.Target.TEXTURE_2D, Texture.WrapMode.CLAMP_TO_EDGE);
         if (aFontSize < 8.0f)
             aFontSize = 8.0f;
         if (aFontSize > 500.0f)
@@ -38,16 +38,15 @@ public class Text {
             textBitmap = Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(textBitmap);
             canvas.drawText(aText,0,-textPaint.ascent(),textPaint);
-            texture = Texture.createFromBitmap(render, Texture.ColorFormat.SRGB, Texture.WrapMode.CLAMP_TO_EDGE, textBitmap);
+            Texture texture = Texture.createFromBitmap(render, Texture.ColorFormat.SRGB, Texture.WrapMode.CLAMP_TO_EDGE, textBitmap);
             GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, texture.getTextureId());
             // Assigns the OpenGL texture with the Bitmap
             GLUtils.texImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA, textBitmap, 0);
             textBitmap.recycle();
+            return texture;
         } catch (Throwable t) {
             Log.e("TEXTURE",t.toString());
-        }finally {
-            Log.v("TEXTURE","texture create success");
-            return texture;
+            return new Texture(render, Texture.Target.TEXTURE_2D, Texture.WrapMode.CLAMP_TO_EDGE);
         }
     }
 }

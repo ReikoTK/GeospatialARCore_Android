@@ -17,27 +17,17 @@
 package com.google.ar.core.examples.java.geospatial;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.location.Location;
-import android.opengl.GLES20;
-import android.opengl.GLES30;
+import android.media.metrics.Event;
 import android.opengl.GLSurfaceView;
-import android.opengl.GLU;
-import android.opengl.GLUtils;
 import android.opengl.Matrix;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Debug;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.GestureDetector;
-import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.PopupMenu;
@@ -47,10 +37,7 @@ import android.widget.Toast;
 import androidx.annotation.GuardedBy;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.DialogFragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import com.airbnb.lottie.LottieAnimationView;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -95,7 +82,6 @@ import com.google.ar.core.examples.java.common.samplerender.Texture;
 import com.google.ar.core.examples.java.common.samplerender.VertexBuffer;
 import com.google.ar.core.examples.java.common.samplerender.arcore.BackgroundRenderer;
 import com.google.ar.core.examples.java.common.samplerender.arcore.PlaneRenderer;
-import com.google.ar.core.examples.java.geospatial.anchor.AnchorViewAdapter;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.core.exceptions.FineLocationPermissionNotGrantedException;
 import com.google.ar.core.exceptions.GooglePlayServicesLocationLibraryNotLinkedException;
@@ -105,29 +91,19 @@ import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 import com.google.ar.core.exceptions.UnsupportedConfigurationException;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
-import com.google.gson.reflect.TypeToken;
-import com.google.ar.core.examples.java.geospatial.anchor.AnchorPose;
-import java.io.ByteArrayOutputStream;
-import java.io.Console;
+import com.google.ar.core.examples.java.geospatial.anchorList.AnchorPose;
+
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.net.HttpURLConnection;
+
 /**
  * Main activity for the Geospatial API example.
  *
@@ -211,7 +187,7 @@ public class GeospatialActivity extends AppCompatActivity
   }
 
   private AnchorType anchorType = AnchorType.GEOSPATIAL;
-
+  private AnchorPose dummyPose = new AnchorPose(34.542,133.326,"Dummy",0);
   private Session session;
   public Session GetSession(){return session;};
   private final SnackbarHelper messageSnackbarHelper = new SnackbarHelper();
@@ -244,7 +220,7 @@ public class GeospatialActivity extends AppCompatActivity
   private final Object anchorsLock = new Object();
 
   @GuardedBy("anchorsLock")
-  private final List<Anchor> anchors = new ArrayList<>();
+  private final List<EventGeoAnchor> anchors = new ArrayList<>();
 
   private final Set<Anchor> terrainAnchors = new HashSet<>();
   private final Set<Anchor> rooftopAnchors = new HashSet<>();
@@ -289,18 +265,10 @@ public class GeospatialActivity extends AppCompatActivity
   private Shader TextShader;
   private Mesh TextMesh;
   private DebugMesh debugMeshRenderer;
-
-  private void SpawnTargetedAnchorPoint(){
-    Intent intent = getIntent();
-    double latitude = intent.getDoubleExtra("TargetLatitude",-1);
-    double longitude = intent.getDoubleExtra("TargetLongitude",-1);
-    if(latitude < 0 || longitude <0){
-      Log.e("Anchor Intent", "Position value is not valid.");
-      return;
-    }
-    String Name = intent.getStringExtra("TargetName");
-    Log.v("TargetAnchor","Spawning " + Name + " at " + latitude + ", " + longitude);
-    createRooftopAnchor(session.getEarth(), latitude,longitude,identityQuaternion);
+  private List<AnchorPose> poseList = new ArrayList<>();
+  private Bundle extras;
+  private void SpawnTargetedAnchorPoint(AnchorPose p){
+    createRooftopAnchor(session.getEarth(), p.latitude,p.longitude,identityQuaternion,p);
   }
 
   @Override
@@ -314,6 +282,13 @@ public class GeospatialActivity extends AppCompatActivity
     tapScreenTextView = findViewById(R.id.tap_screen_text_view);
     setAnchorButton = findViewById(R.id.set_anchor_button);
     clearAnchorsButton = findViewById(R.id.clear_anchors_button);
+
+    extras = getIntent().getBundleExtra("PinDatas");
+    if (extras != null) {
+      poseList = (ArrayList<AnchorPose>) extras.getSerializable("PinDatas");
+    }else{
+      Log.e("ExtraData","EXTRA IS NULL");
+    }
 
     setAnchorButton.setOnClickListener(
             new View.OnClickListener() {
@@ -342,6 +317,7 @@ public class GeospatialActivity extends AppCompatActivity
     // Set up renderer.
     render = new SampleRender(surfaceView, this, getAssets());
 
+    installRequested = false;
     installRequested = false;
     clearedAnchorsAmount = null;
 
@@ -377,7 +353,6 @@ public class GeospatialActivity extends AppCompatActivity
       session.close();
       session = null;
     }
-
     super.onDestroy();
   }
   @Override
@@ -604,7 +579,7 @@ public class GeospatialActivity extends AppCompatActivity
                       "models/LocationPin_tex.png",
                       Texture.WrapMode.CLAMP_TO_EDGE,
                       Texture.ColorFormat.SRGB);
-      Texture textTexture = Text.drawCanvasToTexture(render, getIntent().getStringExtra("TargetName"),72f);
+      //Texture textTexture = Text.drawCanvasToTexture(render, "",72f);
       TextMesh = Mesh.createFromAsset(render, "models/textRenderPlane.obj");
       virtualObjectMesh = Mesh.createFromAsset(render, "models/locationpin.obj");
 
@@ -620,8 +595,8 @@ public class GeospatialActivity extends AppCompatActivity
                       render,
                       "shaders/ar_unlit_text.vert",
                       "shaders/ar_unlit_text.frag",
-                      null)
-              .setTexture("u_Texture",textTexture);
+                      null);
+              //.setTexture("u_Texture",textTexture);
 
       // Virtual object to render (Terrain anchor marker)
       Texture terrainAnchorVirtualObjectTexture =
@@ -768,7 +743,9 @@ public class GeospatialActivity extends AppCompatActivity
         if (lastStatusText.equals(getResources().getString(R.string.status_localize_hint))) {
           message = getResources().getString(R.string.status_localize_complete);
           //Localization complete, spawn the anchor
-          SpawnTargetedAnchorPoint();
+          for(AnchorPose pose : poseList){
+            SpawnTargetedAnchorPoint(pose);
+          }
         }
         break;
     }
@@ -874,17 +851,17 @@ public class GeospatialActivity extends AppCompatActivity
     }
     render.clear(virtualSceneFramebuffer, 0f, 0f, 0f, 0f);
     synchronized (anchorsLock) {
-      for (Anchor anchor : anchors) {
+      for (EventGeoAnchor EA : anchors) {
         // Get the current pose of an Anchor in world space. The Anchor pose is updated
         // during calls to session.update() as ARCore refines its estimate of the world.
         // Only render resolved Terrain & Rooftop anchors and Geospatial anchors.
-        if (anchor.getTrackingState() != TrackingState.TRACKING) {
+        if (EA.anchor.getTrackingState() != TrackingState.TRACKING) {
           continue;
         }
-        anchor.getPose().toMatrix(modelMatrix, 0);
+        EA.anchor.getPose().toMatrix(modelMatrix, 0);
         float[] scaleMatrix = new float[16];
         Matrix.setIdentityM(scaleMatrix, 0);
-        float scale = getScale(anchor.getPose(), camera.getDisplayOrientedPose());
+        float scale = getScale(EA.anchor.getPose(), camera.getDisplayOrientedPose());
         scaleMatrix[0] = scale;
         scaleMatrix[5] = scale;
         scaleMatrix[10] = scale;
@@ -900,9 +877,11 @@ public class GeospatialActivity extends AppCompatActivity
         Matrix.multiplyMM(modelViewProjectionMatrix, 0, projectionMatrix, 0, modelViewMatrix, 0);
 
         // Update shader properties and draw
-        if (terrainAnchors.contains(anchor) || rooftopAnchors.contains(anchor)) {
+        if (terrainAnchors.contains(EA.anchor) || rooftopAnchors.contains(EA.anchor)) {
           terrainAnchorVirtualObjectShader.setMat4(
                   "u_ModelViewProjection", modelViewProjectionMatrix);
+
+          //TextShader.setTexture("u_Texture",EA.TextTexture);
 
           render.draw(virtualObjectMesh, terrainAnchorVirtualObjectShader, virtualSceneFramebuffer);
           render.draw(TextMesh,TextShader,virtualSceneFramebuffer);
@@ -912,10 +891,12 @@ public class GeospatialActivity extends AppCompatActivity
                   "u_ModelViewProjection", modelViewProjectionMatrix);
           float[] textMatrix = modelViewProjectionMatrix;
           TextShader.setMat4("u_ModelViewProjection",textMatrix);
+          //TextShader.setTexture("u_Texture",EA.TextTexture);
           render.draw(
                   virtualObjectMesh, geospatialAnchorVirtualObjectShader, virtualSceneFramebuffer);
           render.draw(TextMesh,TextShader,virtualSceneFramebuffer);
         }
+
       }
       if (anchors.size() > 0) {
         String anchorMessage =
@@ -1105,10 +1086,7 @@ public class GeospatialActivity extends AppCompatActivity
                             quaternion[1],
                             quaternion[2],
                             quaternion[3],
-                            geospatialPose.getOrientationYawAccuracy()) +
-                    //Target Anchor Details
-                    "\nイベント名： " + getIntent().getStringExtra("TargetName") +
-                    "\nタイプ： " + getIntent().getSerializableExtra("TargetType");
+                            geospatialPose.getOrientationYawAccuracy()) ;
     runOnUiThread(
             () -> {
               geospatialPoseTextView.setText(poseText);
@@ -1163,15 +1141,15 @@ public class GeospatialActivity extends AppCompatActivity
     float[] quaternion = geospatialPose.getEastUpSouthQuaternion();
     switch (anchorType) {
       case TERRAIN:
-        createTerrainAnchor(earth, latitude, longitude, identityQuaternion);
+        createTerrainAnchor(earth, latitude, longitude, identityQuaternion,dummyPose);
         storeAnchorParameters(latitude, longitude, 0, identityQuaternion);
         break;
       case GEOSPATIAL:
-        createAnchor(earth, latitude, longitude, altitude, quaternion);
+        createAnchor(earth, latitude, longitude, altitude, quaternion,dummyPose);
         storeAnchorParameters(latitude, longitude, altitude, quaternion);
         break;
       case ROOFTOP:
-        createRooftopAnchor(earth, latitude, longitude, identityQuaternion);
+        createRooftopAnchor(earth, latitude, longitude, identityQuaternion,dummyPose);
         storeAnchorParameters(latitude, longitude, 0, identityQuaternion);
         break;
     }
@@ -1195,8 +1173,8 @@ public class GeospatialActivity extends AppCompatActivity
       statusTextView.setVisibility(View.VISIBLE);
       statusTextView.setText(message);
 
-      for (Anchor anchor : anchors) {
-        anchor.detach();
+      for (EventGeoAnchor anchor : anchors) {
+        anchor.anchor.detach();
       }
       anchors.clear();
     }
@@ -1208,7 +1186,7 @@ public class GeospatialActivity extends AppCompatActivity
 
   /** Create an anchor at a specific geodetic location using a EUS quaternion. */
   private void createAnchor(
-          Earth earth, double latitude, double longitude, double altitude, float[] quaternion) {
+          Earth earth, double latitude, double longitude, double altitude, float[] quaternion,AnchorPose pose) {
     Anchor anchor =
             earth.createAnchor(
                     latitude,
@@ -1218,14 +1196,16 @@ public class GeospatialActivity extends AppCompatActivity
                     quaternion[1],
                     quaternion[2],
                     quaternion[3]);
+    Texture t = Text.drawCanvasToTexture(render,pose.name,72);
     synchronized (anchorsLock) {
-      anchors.add(anchor);
+      EventGeoAnchor ea = new EventGeoAnchor(anchor,pose,t);
+      anchors.add(ea);
     }
   }
 
   /** Create a terrain anchor at a specific geodetic location using a EUS quaternion. */
   private void createTerrainAnchor(
-          Earth earth, double latitude, double longitude, float[] quaternion) {
+          Earth earth, double latitude, double longitude, float[] quaternion, AnchorPose pose) {
     final ResolveAnchorOnTerrainFuture future =
             earth.resolveAnchorOnTerrainAsync(
                     latitude,
@@ -1237,8 +1217,10 @@ public class GeospatialActivity extends AppCompatActivity
                     quaternion[3],
                     (anchor, state) -> {
                       if (state == TerrainAnchorState.SUCCESS) {
+                        Texture t = Text.drawCanvasToTexture(render,pose.name,72);
                         synchronized (anchorsLock) {
-                          anchors.add(anchor);
+                          EventGeoAnchor ea = new EventGeoAnchor(anchor,pose,t);
+                          anchors.add(ea);
                           terrainAnchors.add(anchor);
                         }
                       } else {
@@ -1250,7 +1232,7 @@ public class GeospatialActivity extends AppCompatActivity
 
   /** Create a rooftop anchor at a specific geodetic location using a EUS quaternion. */
   public void createRooftopAnchor(
-          Earth earth, double latitude, double longitude, float[] quaternion) {
+          Earth earth, double latitude, double longitude, float[] quaternion, AnchorPose pose) {
     final ResolveAnchorOnRooftopFuture future =
             earth.resolveAnchorOnRooftopAsync(
                     latitude,
@@ -1262,8 +1244,10 @@ public class GeospatialActivity extends AppCompatActivity
                     quaternion[3],
                     (anchor, state) -> {
                       if (state == RooftopAnchorState.SUCCESS) {
+                        Texture t = Text.drawCanvasToTexture(render,pose.name,72);
                         synchronized (anchorsLock) {
-                          anchors.add(anchor);
+                          EventGeoAnchor ea = new EventGeoAnchor(anchor,pose,t);
+                          anchors.add(ea);
                           rooftopAnchors.add(anchor);
                         }
                       } else {
@@ -1350,13 +1334,13 @@ public class GeospatialActivity extends AppCompatActivity
               };
       switch (type) {
         case TERRAIN:
-          createTerrainAnchor(earth, latitude, longitude, quaternion);
+          createTerrainAnchor(earth, latitude, longitude, quaternion,dummyPose);
           break;
         case ROOFTOP:
-          createRooftopAnchor(earth, latitude, longitude, quaternion);
+          createRooftopAnchor(earth, latitude, longitude, quaternion,dummyPose);
           break;
         default:
-          createAnchor(earth, latitude, longitude, altitude, quaternion);
+          createAnchor(earth, latitude, longitude, altitude, quaternion,dummyPose);
           break;
       }
     }

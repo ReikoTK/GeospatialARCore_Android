@@ -1,8 +1,10 @@
-package com.google.ar.core.examples.java.geospatial.anchor;
+package com.google.ar.core.examples.java.geospatial.anchorList;
 
 import com.google.ar.core.examples.java.geospatial.EventTypesEnum;
 
-public class AnchorPose{
+import java.io.Serializable;
+
+public class AnchorPose implements Serializable {
     //These variable name and class have to be exactly the same as server Json !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     public double latitude;
     public double longitude;
