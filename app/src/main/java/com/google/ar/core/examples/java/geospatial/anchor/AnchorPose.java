@@ -3,12 +3,12 @@ package com.google.ar.core.examples.java.geospatial.anchor;
 import com.google.ar.core.examples.java.geospatial.EventTypesEnum;
 
 public class AnchorPose{
-    //These variable name have to be exactly the same as server Json
+    //These variable name and class have to be exactly the same as server Json !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     public double latitude;
     public double longitude;
     public String name;
-    public int type;
-    public AnchorPose(double Latitude,double Longitude,String Name,int eventType){
+    public Integer type;
+    public AnchorPose(double Latitude,double Longitude,String Name,Integer eventType){
         this.latitude = Latitude;
         this.longitude = Longitude;
         this.name = Name;
@@ -24,7 +24,7 @@ public class AnchorPose{
     public double getLongitude(){
         return longitude;
     }
-    public String getEventType(){
-        return EventTypesEnum.createEventTypeEnum(type).name();
+    public EventTypesEnum getEventType(){
+        return EventTypesEnum.createEventTypeEnum(type);
     }
 }

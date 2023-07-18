@@ -1108,7 +1108,7 @@ public class GeospatialActivity extends AppCompatActivity
                             geospatialPose.getOrientationYawAccuracy()) +
                     //Target Anchor Details
                     "\nイベント名： " + getIntent().getStringExtra("TargetName") +
-                    "\nタイプ： " + getIntent().getStringExtra("TargetType");
+                    "\nタイプ： " + getIntent().getSerializableExtra("TargetType");
     runOnUiThread(
             () -> {
               geospatialPoseTextView.setText(poseText);

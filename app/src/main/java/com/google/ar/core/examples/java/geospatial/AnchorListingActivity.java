@@ -61,6 +61,8 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
     private FusedLocationProviderClient fusedLocationProviderClient;
     private List<AnchorPose> poseList;
     private List<AnchorFilterButton> AllFilterBtn;
+    //Marker list for filtering
+    private List<Marker> CreatedMarkers = new ArrayList<>();
     private AnchorFilterButton FilterEventBtn;
     private AnchorFilterButton FilterFoodBtn;
     private AnchorFilterButton FilterShopBtn;
@@ -89,6 +91,7 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
         AllFilterBtn = new ArrayList<>();
+        //If there are many filter types may need to find another way to do this shit
         //Filtering buttons binding
         FilterEventBtn = new AnchorFilterButton(findViewById(R.id.FilterEventBtn),EventTypesEnum.イベント,this);
         FilterEventBtn.CreateOnClick(this);
@@ -108,6 +111,11 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
             public void onClick(View view) {
                 clearAllSelection();
                 FilterAllBtn.setBackgroundColor(getColor(R.color.deepBlue));
+                //Markers Reset
+                for (Marker m : CreatedMarkers){
+                    m.setVisible(true);
+                }
+                //List Reset
                 AnchorViewAdapter adapter = new AnchorViewAdapter(poseList);
                 runOnUiThread(new Runnable() {
                     @Override
@@ -147,13 +155,6 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
                         anchorListing.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                             @Override
                             public void onGlobalLayout() {
-                                //googlemap add pins anchorListing.getAdapter().getItemCount()
-                                for (int i = 0; i < anchorListing.getChildCount(); i++) {
-                                    //AnchorViewHolder holder = (AnchorViewHolder) anchorListing.findViewHolderForAdapterPosition(i);
-                                    //AnchorViewHolder holder = (AnchorViewHolder) anchorListing.getChildViewHolder(anchorListing.getChildAt(i));
-                                    //addMarkerToMap(holder.latitude,holder.longitude,holder.Name, anchorListing.getChildAt(i));
-                                    //holder.distanceView.setText("ggggg");
-                                }
                             }
                         });
 
@@ -184,7 +185,7 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
         return result.toString("UTF-8");
     }
 
-    public void openARActivity(double latitude, double longitude, String Name, String EventType) {
+    public void openARActivity(double latitude, double longitude, String Name, EventTypesEnum EventType) {
         Intent intent = new Intent(this, GeospatialActivity.class);
         intent.putExtra("TargetLatitude", latitude);
         intent.putExtra("TargetLongitude", longitude);
@@ -225,17 +226,22 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
         StartHTTPCall();
     }
 
-    public void addMarkerToMap(double latitude, double longitude, String Name, View v){
+    public void addMarkerToMap(double latitude, double longitude, String Name, View v,EventTypesEnum eventType){
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
                 LatLng point = new LatLng(latitude,longitude);
+
                 Marker m = googleMap.addMarker(new MarkerOptions()
                         .position(point)
                         .title(Name)
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE)));
-                googleMarkerTag tag = new googleMarkerTag(Name,v);
+
+                googleMarkerTag tag = new googleMarkerTag(Name,v,eventType);
                 m.setTag(tag);
+                //add to filter list
+                CreatedMarkers.add(m);
+
                 googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
                     @Override
                     public boolean onMarkerClick(@NonNull Marker marker) {
@@ -267,7 +273,17 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
     }
 
     public void filterList(EventTypesEnum eventType){
+        //Markers
+        for(Marker m : CreatedMarkers){
+            googleMarkerTag tag = (googleMarkerTag) m.getTag();
+            if (tag.eventType != eventType){
+                m.setVisible(false);
+            }else{
+                m.setVisible(true);
+            }
+        }
 
+        //List
         List<AnchorPose> newList = new ArrayList<>();
         for (AnchorPose pose: poseList) {
             if(pose.type == eventType.getValue()){
@@ -289,5 +305,16 @@ public class AnchorListingActivity extends AppCompatActivity implements OnMapRea
         for (AnchorFilterButton btn:AllFilterBtn) {
             btn.clearSelection();
         }
+    }
+
+    public boolean markerExistOnMap(String ID){
+        for(Marker m : CreatedMarkers){
+            googleMarkerTag tag = (googleMarkerTag) m.getTag();
+            //FOR REAL IMPLEMENTATION CREATE A UID FOR EACH TAG INSTEAD OF USING THE NAME TO CHECK
+            if(tag.Name == ID){
+                return true;
+            }
+        }
+        return false;
     }
 }

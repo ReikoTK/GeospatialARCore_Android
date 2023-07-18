@@ -29,7 +29,7 @@ public class AnchorViewAdapter extends RecyclerView.Adapter<AnchorViewHolder>{
     }
 
     @Override
-    public void onBindViewHolder(AnchorViewHolder viewHolder,final int position ){
+    public void onBindViewHolder(AnchorViewHolder viewHolder,final int position){
         viewHolder.NameView.setText(list.get(position).getName());
         viewHolder.LatView.setText(list.get(position).getLatitude() + "");
         viewHolder.LongView.setText(list.get(position).getLongitude() + "");
@@ -37,8 +37,13 @@ public class AnchorViewAdapter extends RecyclerView.Adapter<AnchorViewHolder>{
         viewHolder.longitude = list.get(position).getLongitude();
         viewHolder.Name = list.get(position).getName();
         viewHolder.EventType = list.get(position).getEventType();
-        Log.e("ACT",act.toString());
-        act.addMarkerToMap(list.get(position).getLatitude(),list.get(position).getLongitude(),list.get(position).getName(),viewHolder.itemView);
+
+        //Only create a new marker when it doesnt exist
+        //For debugging the exist checker is Marker Name, REMEMBER to change to some kind of UID on server side for real usage
+        if(!act.markerExistOnMap(list.get(position).getName())){
+            Log.v("Marker","Create Marker on map : " + list.get(position).getName());
+            act.addMarkerToMap(list.get(position).getLatitude(),list.get(position).getLongitude(),list.get(position).getName(),viewHolder.itemView,list.get(position).getEventType());
+        }
 
         Float dist = act.calcDist(list.get(position).latitude,list.get(position).longitude);
         if (dist>1000){
