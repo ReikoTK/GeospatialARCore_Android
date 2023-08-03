@@ -1,10 +1,15 @@
 GeospatialARCore_Android
 ---
+Recent Update
+- Filtering for 2D map points (Event, Shop, Food)
+- New URL for testing purpose server https
+- New structure of JSON describing points
+- Can now display all nearby points at once in AR mode
+---
 TODO
-- add pins to 2d map
-- bind pins data with ar data
-- filtering for anchor points
 - server side stuff
+- Fix the text renderer, make it always face camera
+- Points in AR mode have to have culling with buildings
 ---
 Concept image
 <br/>
